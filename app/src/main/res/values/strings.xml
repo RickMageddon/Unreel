@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">Unreel</string>
     <string name="service_label">Unreel – Reels blocker</string>
-    <string name="service_description">Unreel hides the Instagram Reels tab, closes Reels when they open and blocks TikTok. It only looks at the screen of those apps and has no internet access, so it can\'t send any data anywhere.</string>
-    <string name="intro">Unreel hides the Reels button in Instagram, closes Reels when they open (from the feed, Explore or DMs) and blocks TikTok.</string>
+    <string name="service_description">Unreel hides Instagram Reels and YouTube Shorts, closes them when they open and blocks TikTok. It only looks at the screen of those apps and has no internet access, so it can\'t send any data anywhere.</string>
+    <string name="intro">Unreel hides the Reels button in Instagram and the Shorts button in YouTube, closes Reels and Shorts when they open anyway, and blocks TikTok.</string>
 
     <string name="status_on">✅ Unreel is active</string>
     <string name="status_off">⛔ Unreel is not active yet – follow the steps below</string>
@@ -17,7 +17,7 @@
     <string name="step_allow_body">Tap the button, then tap ⋮ in the top-right corner and choose \"Allow restricted settings\". Confirm with your PIN or fingerprint.\n\nDon\'t see that option? Do step 1 first.</string>
 
     <string name="step_enable_title">Turn on Unreel</string>
-    <string name="step_enable_body">Tap the button, open \"Unreel – Reels blocker\" (under \"Downloaded apps\"), turn on the switch and tap \"Allow\".</string>
+    <string name="step_enable_body">Tap the button and open \"Unreel – Reels blocker\" (under \"Downloaded apps\").\n\nTurn on the switch. Android first asks \"Allow Unreel to have full control of your device?\" – tap \"Allow\". Unreel needs this to see and close Reels, Shorts and TikTok.</string>
 
     <string name="step_battery_title">Keep Unreel running</string>
     <string name="step_battery_body">Some phones stop apps in the background to save battery, which would turn the blocker off. Tap the button and choose \"Allow\".</string>
@@ -31,7 +31,8 @@
     <string name="hide_tab">Hide the Instagram Reels button</string>
     <string name="block_viewer">Close Instagram Reels when they open</string>
     <string name="block_tiktok">Block TikTok</string>
+    <string name="block_shorts">Hide and close YouTube Shorts</string>
     <string name="tiktok_blocked">TikTok is blocked by Unreel</string>
 
-    <string name="privacy">Unreel only reacts to the Instagram and TikTok screens. It has no internet permission, so nothing you see ever leaves your phone.</string>
+    <string name="privacy">Unreel only reacts to the Instagram, YouTube and TikTok screens. It has no internet permission, so nothing you see ever leaves your phone.</string>
 </resources>

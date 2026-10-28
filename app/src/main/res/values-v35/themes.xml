@@ -1,0 +1,9 @@
+<resources>
+    <!-- Android 15 draws apps edge-to-edge by default, which put the text under the top bar. -->
+    <style name="AppTheme" parent="android:Theme.Material.Light.DarkActionBar">
+        <item name="android:colorPrimary">#C13584</item>
+        <item name="android:colorPrimaryDark">#8E2563</item>
+        <item name="android:colorAccent">#C13584</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+</resources>

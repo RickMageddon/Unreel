@@ -1,10 +1,11 @@
 # Unreel
 
-An Android app that removes Instagram Reels and blocks TikTok:
+An Android app that removes Instagram Reels and YouTube Shorts and blocks TikTok:
 
 - **Hides the Reels tab button.** An opaque overlay covers the button in Instagram's bottom bar and swallows taps on it.
 - **Closes Reels when they open.** If a Reels viewer opens anyway (from the feed, Explore, a profile or a DM), Unreel immediately goes back. On the Reels tab itself it switches to the home feed.
 
+- **Hides and closes YouTube Shorts** in the same way: the Shorts tab is covered and the Shorts player is closed.
 - **Blocks TikTok.** TikTok is nothing but short videos, so whenever it opens Unreel sends you back to the home screen.
 
 Each feature can be switched on and off in the app.
@@ -24,7 +25,7 @@ Unreel is an [Accessibility service](https://developer.android.com/guide/topics/
 3. Open Unreel and follow the setup steps on screen (in English or Dutch, following the phone's language). Each step has a button that opens the right settings page and is ticked off or hidden once it's done:
    1. *(Android 13+)* Try to turn on Unreel in Accessibility settings. This is expected to fail with a "Restricted setting" popup, which unlocks the next step.
    2. *(Android 13+)* App info → ⋮ → **Allow restricted settings**.
-   3. Accessibility settings → **Unreel – Reels blocker** → turn it on.
+   3. Accessibility settings → **Unreel – Reels blocker** → turn it on and accept the "full control of your device" popup.
    4. Allow Unreel to run in the background, so battery saving doesn't turn it off.
 4. Open Instagram: the Reels button is gone.
 

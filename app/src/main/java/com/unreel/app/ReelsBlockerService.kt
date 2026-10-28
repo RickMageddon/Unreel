@@ -21,12 +21,25 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
 
 /**
- * Watches Instagram's UI through the accessibility tree and
- *  - covers the Reels tab button with an opaque, touch-swallowing overlay, and
- *  - leaves any Reels viewer as soon as it shows up.
- * TikTok is all short videos, so it is blocked as a whole by going back to the home screen.
+ * Watches short-video apps through the accessibility tree:
+ *  - Instagram Reels and YouTube Shorts: the tab button is covered with an opaque,
+ *    touch-swallowing overlay, and the full-screen viewer is left as soon as it shows up.
+ *  - TikTok is all short videos, so it is blocked as a whole by going back to the home screen.
  */
 class ReelsBlockerService : AccessibilityService() {
+
+    /** Where an app keeps its short-video feed, and which settings control blocking it. */
+    private class ShortsApp(
+        val packageName: String,
+        /** Text or description of the bottom-bar tab, used when no [tabIds] match. */
+        val tabLabel: String,
+        val tabIds: List<String>,
+        val viewerIds: List<String>,
+        /** Tab to switch to when on the shorts tab itself, where "back" might close the app. */
+        val homeTabId: String?,
+        val hidePref: String,
+        val blockPref: String,
+    )
 
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var windowManager: WindowManager
@@ -34,12 +47,11 @@ class ReelsBlockerService : AccessibilityService() {
     private val overlays = mutableListOf<View>()
     private val overlayBounds = mutableListOf<Rect>()
 
-    /** Colour of Instagram's bottom bar, read from the screen; null until sampled. */
-    private var sampledColor: Int? = null
+    /** Colour of each app's bottom bar, read from the screen. */
+    private val sampledColors = mutableMapOf<String, Int>()
 
     private var scanPending = false
     private var lastLeaveAt = 0L
-    private var lastTikTokBlockAt = 0L
 
     private val scan = Runnable {
         scanPending = false
@@ -69,42 +81,41 @@ class ReelsBlockerService : AccessibilityService() {
 
     private fun scanActiveWindow() {
         val root = rootInActiveWindow
-        val app = root?.packageName?.toString()
-        if (app in TIKTOK_PACKAGES && Prefs.get(this, Prefs.BLOCK_TIKTOK)) {
+        val pkg = root?.packageName?.toString()
+        if (pkg in TIKTOK_PACKAGES && Prefs.get(this, Prefs.BLOCK_TIKTOK)) {
             removeOverlays()
             blockTikTok()
             return
         }
-        if (root == null || app != INSTAGRAM) {
+        val app = SHORTS_APPS.firstOrNull { it.packageName == pkg }
+        if (root == null || app == null) {
             removeOverlays()
             return
         }
 
-        if (Prefs.get(this, Prefs.BLOCK_VIEWER) && isReelsOpen(root)) {
-            leaveReels(root)
+        if (Prefs.get(this, app.blockPref) && isViewerOpen(app, root)) {
+            leaveViewer(app, root)
         }
 
-        if (Prefs.get(this, Prefs.HIDE_TAB)) {
-            coverReelsTabs(root)
+        if (Prefs.get(this, app.hidePref)) {
+            coverTabs(app, root)
         } else {
             removeOverlays()
         }
     }
 
-    // --- Reels viewer ------------------------------------------------------------------------
+    // --- Short-video viewer ------------------------------------------------------------------
 
-    private fun isReelsOpen(root: AccessibilityNodeInfo): Boolean =
-        REELS_VIEWER_IDS.any { id -> findVisible(root, id).isNotEmpty() } ||
-            findReelsTabs(root).any { it.isSelected }
+    private fun isViewerOpen(app: ShortsApp, root: AccessibilityNodeInfo): Boolean =
+        app.viewerIds.any { id -> findVisible(root, id).isNotEmpty() } ||
+            findTabs(app, root).any { it.isSelected }
 
-    private fun leaveReels(root: AccessibilityNodeInfo) {
-        val now = SystemClock.uptimeMillis()
-        if (now - lastLeaveAt < LEAVE_COOLDOWN_MS) return
-        lastLeaveAt = now
+    private fun leaveViewer(app: ShortsApp, root: AccessibilityNodeInfo) {
+        if (!cooledDown()) return
 
-        // On the Reels tab itself "back" could close Instagram, so switch to the home feed instead.
-        if (findReelsTabs(root).any { it.isSelected }) {
-            val home = findVisible(root, HOME_TAB_ID).firstOrNull()
+        // On the shorts tab itself "back" could close the app, so switch to the home tab instead.
+        if (app.homeTabId != null && findTabs(app, root).any { it.isSelected }) {
+            val home = findVisible(root, app.homeTabId).firstOrNull()
             if (home != null && home.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return
         }
         performGlobalAction(GLOBAL_ACTION_BACK)
@@ -113,34 +124,46 @@ class ReelsBlockerService : AccessibilityService() {
     // --- TikTok ------------------------------------------------------------------------------
 
     private fun blockTikTok() {
-        val now = SystemClock.uptimeMillis()
-        if (now - lastTikTokBlockAt < LEAVE_COOLDOWN_MS) return
-        lastTikTokBlockAt = now
-
+        if (!cooledDown()) return
         performGlobalAction(GLOBAL_ACTION_HOME)
         Toast.makeText(this, R.string.tiktok_blocked, Toast.LENGTH_SHORT).show()
     }
 
-    // --- Reels tab button --------------------------------------------------------------------
+    // --- Tab button --------------------------------------------------------------------------
 
-    private fun findReelsTabs(root: AccessibilityNodeInfo): List<AccessibilityNodeInfo> {
-        val byId = findVisible(root, REELS_TAB_ID)
+    private fun findTabs(app: ShortsApp, root: AccessibilityNodeInfo): List<AccessibilityNodeInfo> {
+        val byId = app.tabIds.flatMap { findVisible(root, it) }
         if (byId.isNotEmpty()) return byId
 
-        // Fallback for builds where the id changed: a node described exactly as "Reels"
-        // that sits in the bottom navigation area.
-        val bottomArea = resources.displayMetrics.heightPixels * 0.8
+        // A node labelled exactly like the tab, sitting in the bottom navigation bar. The label
+        // may be on a child of the tab, so cover its clickable parent (but never a large area).
+        val screenHeight = resources.displayMetrics.heightPixels
         val bounds = Rect()
-        return root.findAccessibilityNodeInfosByText("Reels").filter { node ->
-            node.getBoundsInScreen(bounds)
-            node.isVisibleToUser &&
-                node.contentDescription?.toString().equals("Reels", ignoreCase = true) &&
-                bounds.top >= bottomArea
-        }
+        return root.findAccessibilityNodeInfosByText(app.tabLabel)
+            .filter { node ->
+                node.isVisibleToUser &&
+                    (node.text?.toString().equals(app.tabLabel, ignoreCase = true) ||
+                        node.contentDescription?.toString().equals(app.tabLabel, ignoreCase = true))
+            }
+            .map { clickableAncestor(it) }
+            .filter { node ->
+                node.getBoundsInScreen(bounds)
+                bounds.top >= screenHeight * 0.8 && bounds.height() < screenHeight * 0.15
+            }
+            .distinctBy { node -> Rect().also { node.getBoundsInScreen(it) } }
     }
 
-    private fun coverReelsTabs(root: AccessibilityNodeInfo) {
-        val targets = findReelsTabs(root)
+    private fun clickableAncestor(node: AccessibilityNodeInfo): AccessibilityNodeInfo {
+        var current = node
+        repeat(3) {
+            if (current.isClickable) return current
+            current = current.parent ?: return node
+        }
+        return if (current.isClickable) current else node
+    }
+
+    private fun coverTabs(app: ShortsApp, root: AccessibilityNodeInfo) {
+        val targets = findTabs(app, root)
             .map { node -> Rect().also { node.getBoundsInScreen(it) } }
             .filter { !it.isEmpty }
 
@@ -157,8 +180,8 @@ class ReelsBlockerService : AccessibilityService() {
             } else {
                 moved = true
                 val view = View(this).apply {
-                    setBackgroundColor(sampledColor ?: fallbackColor())
-                    // Swallow every tap so the Reels tab can't be opened.
+                    setBackgroundColor(sampledColors[app.packageName] ?: fallbackColor())
+                    // Swallow every tap so the tab can't be opened.
                     setOnTouchListener { _, _ -> true }
                 }
                 windowManager.addView(view, overlayParams(bounds))
@@ -168,7 +191,7 @@ class ReelsBlockerService : AccessibilityService() {
         }
 
         if (moved && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            sampleNavBarColor(targets.first())
+            sampleNavBarColor(app, targets.first())
         }
     }
 
@@ -194,10 +217,10 @@ class ReelsBlockerService : AccessibilityService() {
     }
 
     /**
-     * Takes a screenshot and reads the bottom bar's colour just beside the Reels tab (outside our
-     * overlay), so the cover matches Instagram exactly in light mode, dark mode or any new theme.
+     * Takes a screenshot and reads the bottom bar's colour just beside the tab (outside our
+     * overlay), so the cover matches the app exactly in light mode, dark mode or any new theme.
      */
-    private fun sampleNavBarColor(tab: Rect) {
+    private fun sampleNavBarColor(app: ShortsApp, tab: Rect) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
         takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
             override fun onSuccess(screenshot: ScreenshotResult) {
@@ -211,18 +234,15 @@ class ReelsBlockerService : AccessibilityService() {
                 else tab.right + SAMPLE_OFFSET_PX
                 val y = tab.centerY()
                 if (x in 0 until bitmap.width && y in 0 until bitmap.height) {
-                    applyColor(bitmap.getPixel(x, y) or 0xFF000000.toInt())
+                    val color = bitmap.getPixel(x, y) or 0xFF000000.toInt()
+                    sampledColors[app.packageName] = color
+                    overlays.forEach { it.setBackgroundColor(color) }
                 }
                 bitmap.recycle()
             }
 
             override fun onFailure(errorCode: Int) = Unit
         })
-    }
-
-    private fun applyColor(color: Int) {
-        sampledColor = color
-        overlays.forEach { it.setBackgroundColor(color) }
     }
 
     /** Used until a screenshot has been sampled (and always on Android 10 and older). */
@@ -243,29 +263,61 @@ class ReelsBlockerService : AccessibilityService() {
 
     // --- helpers -----------------------------------------------------------------------------
 
+    /** Rate-limits leaving, so one detection doesn't fire "back" several times in a row. */
+    private fun cooledDown(): Boolean {
+        val now = SystemClock.uptimeMillis()
+        if (now - lastLeaveAt < LEAVE_COOLDOWN_MS) return false
+        lastLeaveAt = now
+        return true
+    }
+
     private fun findVisible(root: AccessibilityNodeInfo, id: String) =
         root.findAccessibilityNodeInfosByViewId(id).filter { it.isVisibleToUser }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // Theme may have flipped between light and dark; recreate overlays and sample again.
-        sampledColor = null
+        sampledColors.clear()
         removeOverlays()
     }
 
     companion object {
         private const val INSTAGRAM = "com.instagram.android"
-        private const val REELS_TAB_ID = "$INSTAGRAM:id/clips_tab"
-        private const val HOME_TAB_ID = "$INSTAGRAM:id/feed_tab"
+        private const val YOUTUBE = "com.google.android.youtube"
+
+        private val SHORTS_APPS = listOf(
+            ShortsApp(
+                packageName = INSTAGRAM,
+                tabLabel = "Reels",
+                tabIds = listOf("$INSTAGRAM:id/clips_tab"),
+                viewerIds = listOf(
+                    "$INSTAGRAM:id/clips_viewer_view_pager",
+                    "$INSTAGRAM:id/clips_viewer_container",
+                ),
+                homeTabId = "$INSTAGRAM:id/feed_tab",
+                hidePref = Prefs.HIDE_TAB,
+                blockPref = Prefs.BLOCK_VIEWER,
+            ),
+            ShortsApp(
+                packageName = YOUTUBE,
+                tabLabel = "Shorts",
+                tabIds = emptyList(),
+                viewerIds = listOf(
+                    "$YOUTUBE:id/reel_recycler",
+                    "$YOUTUBE:id/reel_player_page_container",
+                    "$YOUTUBE:id/reel_watch_player",
+                ),
+                // Back from the Shorts tab returns to the previous tab.
+                homeTabId = null,
+                hidePref = Prefs.BLOCK_SHORTS,
+                blockPref = Prefs.BLOCK_SHORTS,
+            ),
+        )
         private val TIKTOK_PACKAGES = setOf(
             "com.zhiliaoapp.musically", // TikTok (most countries)
             "com.ss.android.ugc.trill", // TikTok (some Asian markets)
             "com.zhiliaoapp.musically.go", // TikTok Lite
             "com.ss.android.ugc.tiktok.lite", // TikTok Lite (newer builds)
-        )
-        private val REELS_VIEWER_IDS = listOf(
-            "$INSTAGRAM:id/clips_viewer_view_pager",
-            "$INSTAGRAM:id/clips_viewer_container",
         )
 
         private const val SCAN_DELAY_MS = 100L

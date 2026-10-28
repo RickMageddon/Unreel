@@ -7,6 +7,7 @@ object Prefs {
     const val HIDE_TAB = "hide_tab"
     const val BLOCK_VIEWER = "block_viewer"
     const val BLOCK_TIKTOK = "block_tiktok"
+    const val BLOCK_SHORTS = "block_shorts"
 
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 

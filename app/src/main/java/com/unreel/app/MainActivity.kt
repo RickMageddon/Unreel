@@ -42,6 +42,7 @@ class MainActivity : Activity() {
         bindSwitch(R.id.hide_tab, Prefs.HIDE_TAB)
         bindSwitch(R.id.block_viewer, Prefs.BLOCK_VIEWER)
         bindSwitch(R.id.block_tiktok, Prefs.BLOCK_TIKTOK)
+        bindSwitch(R.id.block_shorts, Prefs.BLOCK_SHORTS)
     }
 
     override fun onResume() {

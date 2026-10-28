@@ -123,6 +123,11 @@
                 android:text="@string/block_viewer" />
 
             <Switch
+                android:id="@+id/block_shorts"
+                style="@style/CardSwitch"
+                android:text="@string/block_shorts" />
+
+            <Switch
                 android:id="@+id/block_tiktok"
                 style="@style/CardSwitch"
                 android:text="@string/block_tiktok" />
