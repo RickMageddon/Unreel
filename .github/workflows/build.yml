@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,14 +19,37 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
+      # Optional: a fixed signing key from repository secrets, so new builds install as updates.
+      - name: Load signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        if: env.KEYSTORE_BASE64 != ''
+        run: echo "$KEYSTORE_BASE64" | base64 -d > app/release.keystore
 
+      # The Android SDK is preinstalled on GitHub's Ubuntu runners.
       - name: Build APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleRelease
+          ./gradlew --no-daemon assembleRelease -PbuildNumber=${{ github.run_number }}
+          cp app/build/outputs/apk/release/app-release.apk Unreel.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: Unreel-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          path: Unreel.apk
+
+      - name: Publish release
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Unreel 1.0.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: Unreel.apk
+          body: |
+            Automatic build of ${{ github.sha }}.
+            Download **Unreel.apk** below and open it on your phone to install or update.

@@ -13,7 +13,7 @@ Unreel is an [Accessibility service](https://developer.android.com/guide/topics/
 
 ## Install
 
-1. Download the APK from the **Build APK** workflow run (Actions tab → latest run → `Unreel-apk` artifact), or build it yourself:
+1. Download `Unreel.apk` from the [latest release](../../releases/latest). Every push builds and publishes a new release automatically. Or build it yourself:
    ```sh
    ./gradlew assembleRelease
    # → app/build/outputs/apk/release/app-release.apk
@@ -24,6 +24,21 @@ Unreel is an [Accessibility service](https://developer.android.com/guide/topics/
 4. Open Instagram: the Reels button is gone.
 
 Some phones (Xiaomi, Huawei, Samsung with aggressive battery saving) kill accessibility services in the background. If Unreel stops working, set its battery usage to *Unrestricted*.
+
+## Updating without uninstalling
+
+Android only installs an update if it is signed with the same key as the installed app. Without setup, each automatic build gets a new throwaway key, so you have to uninstall the old version first. To fix that, create a key once and store it as repository secrets (Settings → Secrets and variables → Actions):
+
+```sh
+keytool -genkeypair -keystore release.keystore -alias unreel -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=Unreel"
+base64 -w0 release.keystore   # → value for KEYSTORE_BASE64
+```
+
+| Secret | Value |
+| --- | --- |
+| `KEYSTORE_BASE64` | output of the `base64` command |
+| `KEYSTORE_PASSWORD` | the password you chose in `keytool` |
+| `KEY_ALIAS` | `unreel` |
 
 ## Limitations
 
