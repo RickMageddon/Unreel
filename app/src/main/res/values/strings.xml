@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Unreel</string>
+    <string name="service_label">Unreel – Reels blocker</string>
+    <string name="service_description">Unreel watches the Instagram app and hides the Reels tab and closes any Reels that open. It only reads the Instagram screen, never collects or sends any data.</string>
+    <string name="intro">Unreel hides the Reels button in Instagram and kicks you out of Reels whenever they open (also Reels from the feed, Explore or DMs).\n\nIt works through Android\'s Accessibility service, so you need to switch it on once.</string>
+    <string name="status_on">✅ Blocker is active</string>
+    <string name="status_off">⛔ Blocker is not enabled yet</string>
+    <string name="open_settings">Open Accessibility settings</string>
+    <string name="steps">In Accessibility settings: tap \"Installed apps\" / \"Downloaded apps\" → \"Unreel – Reels blocker\" → turn it on.\n\nOn Android 13+ the switch may be greyed out for sideloaded apps. Then go to Settings → Apps → Unreel → ⋮ (top right) → \"Allow restricted settings\" and try again.</string>
+    <string name="open_app_info">Open Unreel app info</string>
+    <string name="hide_tab">Hide the Reels tab button</string>
+    <string name="block_viewer">Close Reels when they open</string>
+</resources>
