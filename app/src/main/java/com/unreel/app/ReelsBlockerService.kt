@@ -18,11 +18,13 @@ import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Toast
 
 /**
  * Watches Instagram's UI through the accessibility tree and
  *  - covers the Reels tab button with an opaque, touch-swallowing overlay, and
  *  - leaves any Reels viewer as soon as it shows up.
+ * TikTok is all short videos, so it is blocked as a whole by going back to the home screen.
  */
 class ReelsBlockerService : AccessibilityService() {
 
@@ -37,10 +39,11 @@ class ReelsBlockerService : AccessibilityService() {
 
     private var scanPending = false
     private var lastLeaveAt = 0L
+    private var lastTikTokBlockAt = 0L
 
     private val scan = Runnable {
         scanPending = false
-        scanInstagram()
+        scanActiveWindow()
     }
 
     override fun onServiceConnected() {
@@ -64,9 +67,15 @@ class ReelsBlockerService : AccessibilityService() {
         super.onDestroy()
     }
 
-    private fun scanInstagram() {
+    private fun scanActiveWindow() {
         val root = rootInActiveWindow
-        if (root == null || root.packageName?.toString() != INSTAGRAM) {
+        val app = root?.packageName?.toString()
+        if (app in TIKTOK_PACKAGES && Prefs.get(this, Prefs.BLOCK_TIKTOK)) {
+            removeOverlays()
+            blockTikTok()
+            return
+        }
+        if (root == null || app != INSTAGRAM) {
             removeOverlays()
             return
         }
@@ -99,6 +108,17 @@ class ReelsBlockerService : AccessibilityService() {
             if (home != null && home.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return
         }
         performGlobalAction(GLOBAL_ACTION_BACK)
+    }
+
+    // --- TikTok ------------------------------------------------------------------------------
+
+    private fun blockTikTok() {
+        val now = SystemClock.uptimeMillis()
+        if (now - lastTikTokBlockAt < LEAVE_COOLDOWN_MS) return
+        lastTikTokBlockAt = now
+
+        performGlobalAction(GLOBAL_ACTION_HOME)
+        Toast.makeText(this, R.string.tiktok_blocked, Toast.LENGTH_SHORT).show()
     }
 
     // --- Reels tab button --------------------------------------------------------------------
@@ -237,6 +257,12 @@ class ReelsBlockerService : AccessibilityService() {
         private const val INSTAGRAM = "com.instagram.android"
         private const val REELS_TAB_ID = "$INSTAGRAM:id/clips_tab"
         private const val HOME_TAB_ID = "$INSTAGRAM:id/feed_tab"
+        private val TIKTOK_PACKAGES = setOf(
+            "com.zhiliaoapp.musically", // TikTok (most countries)
+            "com.ss.android.ugc.trill", // TikTok (some Asian markets)
+            "com.zhiliaoapp.musically.go", // TikTok Lite
+            "com.ss.android.ugc.tiktok.lite", // TikTok Lite (newer builds)
+        )
         private val REELS_VIEWER_IDS = listOf(
             "$INSTAGRAM:id/clips_viewer_view_pager",
             "$INSTAGRAM:id/clips_viewer_container",

@@ -1,13 +1,37 @@
 <resources>
-    <string name="app_name">Unreel</string>
+    <string name="app_name" translatable="false">Unreel</string>
     <string name="service_label">Unreel – Reels blocker</string>
-    <string name="service_description">Unreel watches the Instagram app and hides the Reels tab and closes any Reels that open. It only reads the Instagram screen, never collects or sends any data.</string>
-    <string name="intro">Unreel hides the Reels button in Instagram and kicks you out of Reels whenever they open (also Reels from the feed, Explore or DMs).\n\nIt works through Android\'s Accessibility service, so you need to switch it on once.</string>
-    <string name="status_on">✅ Blocker is active</string>
-    <string name="status_off">⛔ Blocker is not enabled yet</string>
-    <string name="open_settings">Open Accessibility settings</string>
-    <string name="steps">In Accessibility settings: tap \"Installed apps\" / \"Downloaded apps\" → \"Unreel – Reels blocker\" → turn it on.\n\nOn Android 13+ the switch may be greyed out for sideloaded apps. Then go to Settings → Apps → Unreel → ⋮ (top right) → \"Allow restricted settings\" and try again.</string>
+    <string name="service_description">Unreel hides the Instagram Reels tab, closes Reels when they open and blocks TikTok. It only looks at the screen of those apps and has no internet access, so it can\'t send any data anywhere.</string>
+    <string name="intro">Unreel hides the Reels button in Instagram, closes Reels when they open (from the feed, Explore or DMs) and blocks TikTok.</string>
+
+    <string name="status_on">✅ Unreel is active</string>
+    <string name="status_off">⛔ Unreel is not active yet – follow the steps below</string>
+
+    <string name="setup_header">Setup</string>
+    <string name="setup_done_header">Setup complete</string>
+
+    <string name="step_try_title">Try to turn on Unreel</string>
+    <string name="step_try_body">Android blocks this for apps that don\'t come from the Play Store, so this first attempt is expected to fail – it unlocks the next step.\n\nTap the button, tap \"Unreel – Reels blocker\" (it\'s greyed out) and close the \"Restricted setting\" popup.</string>
+
+    <string name="step_allow_title">Allow restricted settings</string>
+    <string name="step_allow_body">Tap the button, then tap ⋮ in the top-right corner and choose \"Allow restricted settings\". Confirm with your PIN or fingerprint.\n\nDon\'t see that option? Do step 1 first.</string>
+
+    <string name="step_enable_title">Turn on Unreel</string>
+    <string name="step_enable_body">Tap the button, open \"Unreel – Reels blocker\" (under \"Downloaded apps\"), turn on the switch and tap \"Allow\".</string>
+
+    <string name="step_battery_title">Keep Unreel running</string>
+    <string name="step_battery_body">Some phones stop apps in the background to save battery, which would turn the blocker off. Tap the button and choose \"Allow\".</string>
+    <string name="step_done" translatable="false">✓ %1$s</string>
+
+    <string name="open_accessibility">Open Accessibility settings</string>
     <string name="open_app_info">Open Unreel app info</string>
-    <string name="hide_tab">Hide the Reels tab button</string>
-    <string name="block_viewer">Close Reels when they open</string>
+    <string name="allow_battery">Allow running in the background</string>
+
+    <string name="block_header">What to block</string>
+    <string name="hide_tab">Hide the Instagram Reels button</string>
+    <string name="block_viewer">Close Instagram Reels when they open</string>
+    <string name="block_tiktok">Block TikTok</string>
+    <string name="tiktok_blocked">TikTok is blocked by Unreel</string>
+
+    <string name="privacy">Unreel only reacts to the Instagram and TikTok screens. It has no internet permission, so nothing you see ever leaves your phone.</string>
 </resources>

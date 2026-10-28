@@ -1,0 +1,35 @@
+<resources>
+    <string name="service_label">Unreel – Reels-blokkeerder</string>
+    <string name="service_description">Unreel verbergt de Reels-knop in Instagram, sluit Reels als ze openen en blokkeert TikTok. De app kijkt alleen naar het scherm van die apps en heeft geen internettoegang, dus er kan geen data je telefoon verlaten.</string>
+    <string name="intro">Unreel verbergt de Reels-knop in Instagram, sluit Reels als ze openen (vanuit de feed, Verkennen of DM\'s) en blokkeert TikTok.</string>
+
+    <string name="status_on">✅ Unreel is actief</string>
+    <string name="status_off">⛔ Unreel is nog niet actief – volg de stappen hieronder</string>
+
+    <string name="setup_header">Instellen</string>
+    <string name="setup_done_header">Klaar met instellen</string>
+
+    <string name="step_try_title">Probeer Unreel aan te zetten</string>
+    <string name="step_try_body">Android blokkeert dit voor apps die niet uit de Play Store komen. Deze eerste poging mislukt dus – dat is de bedoeling, want daarmee wordt de volgende stap ontgrendeld.\n\nTik op de knop, tik op \"Unreel – Reels-blokkeerder\" (die is grijs) en sluit de melding \"App heeft geen toegang gekregen\".</string>
+
+    <string name="step_allow_title">Beperkte instellingen toestaan</string>
+    <string name="step_allow_body">Tik op de knop, tik rechtsboven op ⋮ en kies \"Beperkte instellingen toestaan\". Bevestig met je pincode of vingerafdruk.\n\nZie je die optie niet? Doe dan eerst stap 1.</string>
+
+    <string name="step_enable_title">Zet Unreel aan</string>
+    <string name="step_enable_body">Tik op de knop, open \"Unreel – Reels-blokkeerder\" (onder \"Gedownloade apps\"), zet de schakelaar aan en tik op \"Toestaan\".</string>
+
+    <string name="step_battery_title">Houd Unreel actief</string>
+    <string name="step_battery_body">Sommige telefoons stoppen apps op de achtergrond om batterij te sparen, waardoor de blokkeerder uitgaat. Tik op de knop en kies \"Toestaan\".</string>
+
+    <string name="open_accessibility">Toegankelijkheid openen</string>
+    <string name="open_app_info">App-info van Unreel openen</string>
+    <string name="allow_battery">Op de achtergrond laten draaien</string>
+
+    <string name="block_header">Wat blokkeren</string>
+    <string name="hide_tab">Reels-knop in Instagram verbergen</string>
+    <string name="block_viewer">Instagram Reels sluiten als ze openen</string>
+    <string name="block_tiktok">TikTok blokkeren</string>
+    <string name="tiktok_blocked">TikTok is geblokkeerd door Unreel</string>
+
+    <string name="privacy">Unreel reageert alleen op de schermen van Instagram en TikTok. De app heeft geen internettoestemming, dus niets van wat je ziet verlaat je telefoon.</string>
+</resources>

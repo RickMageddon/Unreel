@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -17,48 +17,123 @@
 
         <TextView
             android:id="@+id/status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:textSize="20sp"
+            style="@style/Card"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/open_settings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/open_settings" />
+        <TextView
+            android:id="@+id/setup_header"
+            style="@style/Header"
+            android:text="@string/setup_header" />
+
+        <LinearLayout
+            android:id="@+id/step_try"
+            style="@style/Card">
+
+            <TextView
+                android:id="@+id/step_try_title"
+                style="@style/CardTitle"
+                android:text="@string/step_try_title" />
+
+            <TextView
+                android:id="@+id/step_try_body"
+                style="@style/CardBody"
+                android:text="@string/step_try_body" />
+
+            <Button
+                android:id="@+id/open_accessibility_try"
+                style="@style/CardButton"
+                android:text="@string/open_accessibility" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/step_allow"
+            style="@style/Card">
+
+            <TextView
+                android:id="@+id/step_allow_title"
+                style="@style/CardTitle"
+                android:text="@string/step_allow_title" />
+
+            <TextView
+                android:id="@+id/step_allow_body"
+                style="@style/CardBody"
+                android:text="@string/step_allow_body" />
+
+            <Button
+                android:id="@+id/open_app_info"
+                style="@style/CardButton"
+                android:text="@string/open_app_info" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/step_enable"
+            style="@style/Card">
+
+            <TextView
+                android:id="@+id/step_enable_title"
+                style="@style/CardTitle"
+                android:text="@string/step_enable_title" />
+
+            <TextView
+                android:id="@+id/step_enable_body"
+                style="@style/CardBody"
+                android:text="@string/step_enable_body" />
+
+            <Button
+                android:id="@+id/open_accessibility_enable"
+                style="@style/CardButton"
+                android:text="@string/open_accessibility" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/step_battery"
+            style="@style/Card">
+
+            <TextView
+                android:id="@+id/step_battery_title"
+                style="@style/CardTitle"
+                android:text="@string/step_battery_title" />
+
+            <TextView
+                android:id="@+id/step_battery_body"
+                style="@style/CardBody"
+                android:text="@string/step_battery_body" />
+
+            <Button
+                android:id="@+id/allow_battery"
+                style="@style/CardButton"
+                android:text="@string/allow_battery" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/Header"
+            android:text="@string/block_header" />
+
+        <LinearLayout style="@style/Card">
+
+            <Switch
+                android:id="@+id/hide_tab"
+                style="@style/CardSwitch"
+                android:text="@string/hide_tab" />
+
+            <Switch
+                android:id="@+id/block_viewer"
+                style="@style/CardSwitch"
+                android:text="@string/block_viewer" />
+
+            <Switch
+                android:id="@+id/block_tiktok"
+                style="@style/CardSwitch"
+                android:text="@string/block_tiktok" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:alpha="0.7"
-            android:text="@string/steps"
-            android:textSize="14sp" />
-
-        <Button
-            android:id="@+id/open_app_info"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/open_app_info" />
-
-        <Switch
-            android:id="@+id/hide_tab"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/hide_tab"
-            android:textSize="16sp" />
-
-        <Switch
-            android:id="@+id/block_viewer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/block_viewer"
-            android:textSize="16sp" />
+            android:layout_marginTop="24dp"
+            android:alpha="0.6"
+            android:text="@string/privacy"
+            android:textSize="13sp" />
     </LinearLayout>
 </ScrollView>
