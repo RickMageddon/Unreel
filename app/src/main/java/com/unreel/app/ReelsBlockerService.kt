@@ -1,7 +1,10 @@
 package com.unreel.app
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityService.ScreenshotResult
+import android.accessibilityservice.AccessibilityService.TakeScreenshotCallback
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Rect
@@ -9,6 +12,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.view.Display
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -27,6 +31,9 @@ class ReelsBlockerService : AccessibilityService() {
 
     private val overlays = mutableListOf<View>()
     private val overlayBounds = mutableListOf<Rect>()
+
+    /** Colour of Instagram's bottom bar, read from the screen; null until sampled. */
+    private var sampledColor: Int? = null
 
     private var scanPending = false
     private var lastLeaveAt = 0L
@@ -119,15 +126,18 @@ class ReelsBlockerService : AccessibilityService() {
 
         while (overlays.size > targets.size) removeOverlayAt(overlays.lastIndex)
 
+        var moved = false
         targets.forEachIndexed { i, bounds ->
             if (i < overlays.size) {
                 if (overlayBounds[i] != bounds) {
                     windowManager.updateViewLayout(overlays[i], overlayParams(bounds))
                     overlayBounds[i] = bounds
+                    moved = true
                 }
             } else {
+                moved = true
                 val view = View(this).apply {
-                    setBackgroundColor(navBarColor())
+                    setBackgroundColor(sampledColor ?: fallbackColor())
                     // Swallow every tap so the Reels tab can't be opened.
                     setOnTouchListener { _, _ -> true }
                 }
@@ -135,6 +145,10 @@ class ReelsBlockerService : AccessibilityService() {
                 overlays.add(view)
                 overlayBounds.add(bounds)
             }
+        }
+
+        if (moved && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            sampleNavBarColor(targets.first())
         }
     }
 
@@ -159,10 +173,42 @@ class ReelsBlockerService : AccessibilityService() {
         }
     }
 
-    /** Instagram follows the system theme, so match its bottom bar colour. */
-    private fun navBarColor(): Int {
+    /**
+     * Takes a screenshot and reads the bottom bar's colour just beside the Reels tab (outside our
+     * overlay), so the cover matches Instagram exactly in light mode, dark mode or any new theme.
+     */
+    private fun sampleNavBarColor(tab: Rect) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+        takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
+            override fun onSuccess(screenshot: ScreenshotResult) {
+                val buffer = screenshot.hardwareBuffer
+                val bitmap = Bitmap.wrapHardwareBuffer(buffer, screenshot.colorSpace)
+                    ?.copy(Bitmap.Config.ARGB_8888, false)
+                buffer.close()
+                if (bitmap == null) return
+
+                val x = if (tab.left >= SAMPLE_OFFSET_PX) tab.left - SAMPLE_OFFSET_PX
+                else tab.right + SAMPLE_OFFSET_PX
+                val y = tab.centerY()
+                if (x in 0 until bitmap.width && y in 0 until bitmap.height) {
+                    applyColor(bitmap.getPixel(x, y) or 0xFF000000.toInt())
+                }
+                bitmap.recycle()
+            }
+
+            override fun onFailure(errorCode: Int) = Unit
+        })
+    }
+
+    private fun applyColor(color: Int) {
+        sampledColor = color
+        overlays.forEach { it.setBackgroundColor(color) }
+    }
+
+    /** Used until a screenshot has been sampled (and always on Android 10 and older). */
+    private fun fallbackColor(): Int {
         val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        return if (night == Configuration.UI_MODE_NIGHT_YES) Color.BLACK else Color.WHITE
+        return if (night == Configuration.UI_MODE_NIGHT_YES) DARK_BAR_COLOR else Color.WHITE
     }
 
     private fun removeOverlayAt(index: Int) {
@@ -182,7 +228,8 @@ class ReelsBlockerService : AccessibilityService() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        // Theme may have flipped between light and dark; recreate overlays with the new colour.
+        // Theme may have flipped between light and dark; recreate overlays and sample again.
+        sampledColor = null
         removeOverlays()
     }
 
@@ -197,5 +244,7 @@ class ReelsBlockerService : AccessibilityService() {
 
         private const val SCAN_DELAY_MS = 100L
         private const val LEAVE_COOLDOWN_MS = 800L
+        private const val SAMPLE_OFFSET_PX = 3
+        private val DARK_BAR_COLOR = Color.rgb(0x0C, 0x10, 0x14)
     }
 }
